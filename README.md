@@ -1,6 +1,6 @@
 # Gêmeo Digital para Otimização de Irrigação em Culturas de Pequena Escala
 
-> Projeto desenvolvido no âmbito do Bacharelado em Inteligência Artificial — Instituto de Informática (UFG), com apoio do CEIA e AKCIT.
+> Projeto desenvolvido na disciplina **INF0549 — Gêmeos Digitais: Conceitos, Arquiteturas e Aplicações Práticas**, ministrada pelo Prof. [Iwens Gervasio Sene Junior](http://www.docente.ufg.br/iwens) no Instituto de Informática da Universidade Federal de Goiás (UFG).
 
 Sistema de gêmeo digital que integra leituras de sensores de campo (temperatura e umidade do solo e do ar), dados meteorológicos do INPE e um modelo preditivo baseado na equação de Penman-Monteith (FAO-56) para antecipar quando e quanto irrigar em culturas de pequena escala.
 
@@ -128,9 +128,17 @@ O documento completo da metodologia adotada está em `docs/resumo_metodologico.d
 - CHEN, T.; GUESTRIN, C. XGBoost: A Scalable Tree Boosting System. *Proceedings of the 22nd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining*, 2016, p. 785–794.
 - INPE. CPTEC API de Previsão Numérica de Tempo e Clima. Disponível em http://servicos.cptec.inpe.br/XML/.
 
-## Autor
+## Autores
 
-Wallisson Policarpo — Bacharelado em Inteligência Artificial, Instituto de Informática (UFG). Pesquisador no CEIA e AKCIT (Centro de Competência EMBRAPII em Tecnologias Imersivas). Líder pedagógico da Olimpíada Brasileira de Inteligência Artificial Aplicada (OIAA).
+Trabalho desenvolvido por:
+
+- **Wallisson Policarpo**
+- **Giulio Henrique**
+- **Lívia Maria**
+
+Bacharelado em Inteligência Artificial — Instituto de Informática, Universidade Federal de Goiás (UFG).
+
+Disciplina **INF0549 — Gêmeos Digitais: Conceitos, Arquiteturas e Aplicações Práticas**, ministrada pelo Prof. [Iwens Gervasio Sene Junior](http://www.docente.ufg.br/iwens).
 
 ## Licença
 
