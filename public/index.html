@@ -1,0 +1,1898 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gêmeo Digital de Irrigação</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --green-900:#0d3320;--green-800:#1a4d2e;--green-700:#1e6035;
+  --green-600:#2d7a45;--green-500:#3a9a58;--green-400:#4dbb6d;
+  --green-100:#d6f0df;--green-50:#f0faf3;
+  --blue-600:#1a6fa8;--blue-500:#2089cf;--blue-100:#d6eef8;--blue-50:#eef7fc;
+  --orange-500:#e07b20;--orange-100:#fde8cc;
+  --red-500:#d63b3b;--red-100:#fde0e0;
+  --amber-500:#c98b00;--amber-100:#fff0c0;
+  --gray-900:#1a1f1c;--gray-700:#374240;--gray-500:#6b7775;
+  --gray-300:#c4ccc9;--gray-100:#f0f4f2;--gray-50:#f8faf9;
+  --white:#ffffff;
+  --shadow-sm:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --shadow-md:0 4px 12px rgba(0,0,0,.08),0 2px 4px rgba(0,0,0,.04);
+  --shadow-lg:0 10px 30px rgba(0,0,0,.1);
+  --radius:10px;--radius-lg:14px;--radius-xl:18px;
+  --sidebar-w:210px;
+  --font:'DM Sans',sans-serif;--font-mono:'DM Mono',monospace;
+}
+html,body{height:100%;font-family:var(--font);background:var(--gray-50);color:var(--gray-900);font-size:14px;line-height:1.5}
+
+/* ── LAYOUT ─────────────────────────────────────────── */
+.shell{display:flex;height:100vh;overflow:hidden}
+
+/* ── SIDEBAR ─────────────────────────────────────────── */
+.sidebar{
+  width:var(--sidebar-w);min-width:var(--sidebar-w);
+  background:var(--green-900);
+  display:flex;flex-direction:column;
+  padding:0;overflow:hidden;
+  box-shadow:2px 0 12px rgba(0,0,0,.15);
+}
+.sidebar-logo{
+  padding:22px 20px 18px;
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+.logo-mark{
+  width:36px;height:36px;background:var(--green-500);
+  border-radius:10px;display:flex;align-items:center;justify-content:center;
+  margin-bottom:8px;
+}
+.logo-mark svg{width:20px;height:20px;fill:white}
+.logo-text{color:white;font-weight:600;font-size:14px;line-height:1.2}
+.logo-text span{display:block;color:var(--green-400);font-weight:400;font-size:11px;margin-top:1px}
+.nav{flex:1;padding:12px 10px;display:flex;flex-direction:column;gap:2px}
+.nav-item{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 12px;border-radius:8px;
+  color:rgba(255,255,255,.6);font-size:13px;font-weight:500;
+  cursor:pointer;transition:all .15s;border:none;background:none;width:100%;text-align:left;
+}
+.nav-item:hover{background:rgba(255,255,255,.07);color:white}
+.nav-item.active{background:var(--green-700);color:white}
+.nav-item svg{width:16px;height:16px;flex-shrink:0;opacity:.8}
+.nav-item.active svg{opacity:1}
+.nav-badge{
+  margin-left:auto;background:var(--orange-500);
+  color:white;font-size:10px;font-weight:600;
+  padding:1px 6px;border-radius:99px;
+}
+.sidebar-farm{
+  padding:14px 14px;border-top:1px solid rgba(255,255,255,.08);
+}
+.farm-card{
+  background:rgba(255,255,255,.06);border-radius:8px;
+  padding:10px 12px;display:flex;align-items:center;gap:8px;
+}
+.farm-icon{
+  width:30px;height:30px;background:var(--green-700);
+  border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.farm-icon svg{width:16px;height:16px;fill:var(--green-400)}
+.farm-name{color:white;font-weight:500;font-size:12px;line-height:1.2}
+.farm-sub{color:rgba(255,255,255,.4);font-size:10px;margin-top:1px}
+.sidebar-user{
+  padding:12px 14px 14px;border-top:1px solid rgba(255,255,255,.08);
+  display:flex;align-items:center;gap:10px;
+}
+.avatar{
+  width:30px;height:30px;border-radius:50%;
+  background:var(--green-600);display:flex;align-items:center;justify-content:center;
+  color:white;font-weight:600;font-size:11px;flex-shrink:0;
+}
+.user-name{color:white;font-size:12px;font-weight:500}
+.user-role{color:rgba(255,255,255,.4);font-size:10px}
+
+/* ── MAIN ─────────────────────────────────────────────── */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+
+/* ── TOPBAR ──────────────────────────────────────────── */
+.topbar{
+  background:white;border-bottom:1px solid var(--gray-100);
+  padding:0 24px;height:60px;
+  display:flex;align-items:center;gap:20px;
+  box-shadow:var(--shadow-sm);flex-shrink:0;
+}
+.topbar-title{flex:1}
+.topbar-title h1{font-size:18px;font-weight:600;color:var(--gray-900)}
+.topbar-title p{font-size:11px;color:var(--gray-500);margin-top:1px}
+.status-pill{
+  display:flex;align-items:center;gap:6px;
+  background:var(--green-50);border:1px solid var(--green-100);
+  padding:5px 11px;border-radius:99px;
+  font-size:12px;font-weight:500;color:var(--green-800);
+}
+.status-dot{
+  width:7px;height:7px;background:var(--green-500);
+  border-radius:50%;animation:pulse 2s infinite;flex-shrink:0;
+}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+.topbar-meta{
+  display:flex;align-items:center;gap:6px;
+  font-size:12px;color:var(--gray-500);
+}
+.topbar-meta svg{width:14px;height:14px;color:var(--gray-400)}
+.topbar-sep{width:1px;height:20px;background:var(--gray-200)}
+.topbar-time{
+  font-size:12px;color:var(--gray-600);font-weight:500;
+  font-variant-numeric:tabular-nums;
+}
+.notif-btn{
+  width:34px;height:34px;border-radius:8px;border:1px solid var(--gray-200);
+  background:white;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;position:relative;transition:.15s;
+}
+.notif-btn:hover{background:var(--gray-50)}
+.notif-btn svg{width:16px;height:16px;color:var(--gray-600)}
+.notif-badge{
+  position:absolute;top:-4px;right:-4px;
+  background:var(--orange-500);color:white;
+  font-size:9px;font-weight:700;
+  width:16px;height:16px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  border:2px solid white;
+}
+
+/* ── CONTENT ─────────────────────────────────────────── */
+.content{flex:1;overflow-y:auto;padding:20px 24px;display:flex;flex-direction:column;gap:16px}
+
+/* ── PAGES ─────────────────────────────────────────────── */
+.page{display:none;flex-direction:column;gap:16px}
+.page.active{display:flex}
+
+/* ── CARDS ────────────────────────────────────────────── */
+.card{
+  background:white;border-radius:var(--radius-lg);
+  border:1px solid var(--gray-100);
+  box-shadow:var(--shadow-sm);
+  padding:18px 20px;
+}
+.card-title{
+  font-size:13px;font-weight:600;color:var(--gray-700);
+  margin-bottom:14px;display:flex;align-items:center;gap:7px;
+}
+.card-title svg{width:15px;height:15px;color:var(--green-600)}
+
+/* ── STAT CARDS ───────────────────────────────────────── */
+.stat-grid{display:grid;gap:12px}
+.stat-grid-4{grid-template-columns:repeat(4,1fr)}
+.stat-grid-2{grid-template-columns:repeat(2,1fr)}
+.stat-card{
+  background:white;border:1px solid var(--gray-100);
+  border-radius:var(--radius-lg);padding:16px 18px;
+  box-shadow:var(--shadow-sm);
+}
+.stat-header{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.stat-icon{
+  width:34px;height:34px;border-radius:9px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.stat-icon svg{width:17px;height:17px}
+.stat-icon.green{background:var(--green-50)} .stat-icon.green svg{color:var(--green-600)}
+.stat-icon.blue{background:var(--blue-50)} .stat-icon.blue svg{color:var(--blue-600)}
+.stat-icon.orange{background:var(--orange-100)} .stat-icon.orange svg{color:var(--orange-500)}
+.stat-icon.red{background:var(--red-100)} .stat-icon.red svg{color:var(--red-500)}
+.stat-label{font-size:11px;color:var(--gray-500);font-weight:500}
+.stat-value{font-size:24px;font-weight:600;color:var(--gray-900);line-height:1;font-variant-numeric:tabular-nums}
+.stat-sub{font-size:11px;margin-top:4px;font-weight:500}
+.stat-sub.good{color:var(--green-600)}
+.stat-sub.warn{color:var(--amber-500)}
+.stat-sub.bad{color:var(--red-500)}
+.stat-sub.neutral{color:var(--gray-500)}
+
+/* ── BADGE ────────────────────────────────────────────── */
+.badge{
+  display:inline-flex;align-items:center;
+  padding:2px 8px;border-radius:99px;
+  font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.03em;
+}
+.badge.green{background:var(--green-100);color:var(--green-800)}
+.badge.orange{background:var(--orange-100);color:#7a4200}
+.badge.red{background:var(--red-100);color:#7a1c1c}
+.badge.blue{background:var(--blue-100);color:#0e3f62}
+.badge.gray{background:var(--gray-100);color:var(--gray-700)}
+
+/* ── IRRIGATION PREDICTION CARD ─────────────────────── */
+.irrig-card{
+  background:linear-gradient(135deg,var(--green-800) 0%,var(--green-700) 100%);
+  border-radius:var(--radius-lg);padding:20px;color:white;
+  box-shadow:var(--shadow-md);
+}
+.irrig-card-title{font-size:11px;font-weight:500;opacity:.7;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.irrig-card-time{font-size:22px;font-weight:600;margin-bottom:14px}
+.irrig-card-time span{color:var(--green-400)}
+.irrig-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-top:1px solid rgba(255,255,255,.1)}
+.irrig-row svg{width:14px;height:14px;opacity:.6}
+.irrig-row-label{font-size:11px;opacity:.6;flex:1}
+.irrig-row-val{font-size:13px;font-weight:600}
+.irrig-row-val.highlight{color:var(--green-400);font-size:16px}
+
+/* ── URGENCY BANNER ─────────────────────────────────── */
+.urgency-banner{
+  border-radius:var(--radius);padding:12px 16px;
+  display:flex;align-items:center;gap:10px;
+  font-weight:500;font-size:13px;
+}
+.urgency-banner.ok{background:var(--green-50);border:1px solid var(--green-100);color:var(--green-800)}
+.urgency-banner.programar{background:var(--blue-50);border:1px solid var(--blue-100);color:var(--blue-600)}
+.urgency-banner.atencao{background:var(--amber-100);border:1px solid #ffe08a;color:var(--amber-500)}
+.urgency-banner.urgente{background:var(--red-100);border:1px solid #f5b5b5;color:var(--red-500)}
+.urgency-banner svg{width:18px;height:18px;flex-shrink:0}
+
+/* ── REASONS LIST ────────────────────────────────────── */
+.reason-list{list-style:none;display:flex;flex-direction:column;gap:7px;margin-top:2px}
+.reason-list li{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--gray-700)}
+.reason-list li svg{width:14px;height:14px;color:var(--green-500);flex-shrink:0}
+
+/* ── SENSOR CARDS (2x2 grid) ────────────────────────── */
+.sensor-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.sensor-card{
+  background:white;border:1px solid var(--gray-100);
+  border-radius:var(--radius-lg);padding:16px;
+  display:flex;align-items:center;gap:12px;
+  box-shadow:var(--shadow-sm);
+}
+.sensor-icon{
+  width:40px;height:40px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.sensor-icon.solo-umid{background:var(--blue-50)} .sensor-icon.solo-umid svg{color:var(--blue-600)}
+.sensor-icon.solo-temp{background:var(--orange-100)} .sensor-icon.solo-temp svg{color:var(--orange-500)}
+.sensor-icon.ar-umid{background:var(--blue-50)} .sensor-icon.ar-umid svg{color:var(--blue-500)}
+.sensor-icon.ar-temp{background:var(--red-100)} .sensor-icon.ar-temp svg{color:var(--red-500)}
+.sensor-icon svg{width:20px;height:20px}
+.sensor-info{flex:1;min-width:0}
+.sensor-name{font-size:11px;color:var(--gray-500);font-weight:500;white-space:nowrap}
+.sensor-val{font-size:20px;font-weight:600;color:var(--gray-900);line-height:1.1;font-variant-numeric:tabular-nums}
+.sensor-val small{font-size:12px;font-weight:400;color:var(--gray-500)}
+
+/* ── ETO SECTION ─────────────────────────────────────── */
+.eto-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px}
+.eto-item{background:var(--gray-50);border-radius:8px;padding:12px 14px}
+.eto-label{font-size:10px;color:var(--gray-500);font-weight:500;text-transform:uppercase;letter-spacing:.04em}
+.eto-value{font-size:17px;font-weight:600;color:var(--gray-900);margin-top:2px;font-variant-numeric:tabular-nums}
+.eto-value small{font-size:11px;font-weight:400;color:var(--gray-500)}
+
+/* ── CHART WRAPPER ───────────────────────────────────── */
+.chart-wrap{position:relative;height:180px}
+.chart-wrap-tall{position:relative;height:220px}
+.chart-legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:10px}
+.chart-legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--gray-600)}
+.chart-legend-dot{width:10px;height:3px;border-radius:2px;flex-shrink:0}
+
+/* ── TABLE ───────────────────────────────────────────── */
+.data-table{width:100%;border-collapse:collapse;font-size:12px}
+.data-table th{
+  text-align:left;padding:8px 12px;
+  font-size:10px;font-weight:600;text-transform:uppercase;
+  letter-spacing:.04em;color:var(--gray-500);
+  border-bottom:2px solid var(--gray-100);
+}
+.data-table td{padding:9px 12px;border-bottom:1px solid var(--gray-50);color:var(--gray-700)}
+.data-table tr:last-child td{border-bottom:none}
+.data-table tr:hover td{background:var(--gray-50)}
+
+/* ── PROGRESS BAR ────────────────────────────────────── */
+.progress-row{display:flex;align-items:center;gap:10px;padding:6px 0}
+.progress-label{font-size:12px;color:var(--gray-600);width:80px;flex-shrink:0}
+.progress-track{flex:1;height:6px;background:var(--gray-100);border-radius:99px;overflow:hidden}
+.progress-fill{height:100%;border-radius:99px;transition:width .6s ease}
+.progress-fill.green{background:var(--green-500)}
+.progress-fill.blue{background:var(--blue-500)}
+.progress-fill.orange{background:var(--orange-500)}
+.progress-val{font-size:12px;font-weight:600;color:var(--gray-900);width:38px;text-align:right;flex-shrink:0;font-variant-numeric:tabular-nums}
+
+/* ── ALERTS ──────────────────────────────────────────── */
+.alert-item{
+  display:flex;gap:12px;align-items:flex-start;
+  padding:12px 14px;border-radius:var(--radius);
+  border:1px solid;margin-bottom:8px;
+}
+.alert-item.warn{background:var(--amber-100);border-color:#ffe08a}
+.alert-item.info{background:var(--blue-50);border-color:var(--blue-100)}
+.alert-item.ok{background:var(--green-50);border-color:var(--green-100)}
+.alert-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.alert-icon.warn{background:var(--amber-100)} .alert-icon.warn svg{color:var(--amber-500)}
+.alert-icon.info{background:var(--blue-100)} .alert-icon.info svg{color:var(--blue-600)}
+.alert-icon.ok{background:var(--green-100)} .alert-icon.ok svg{color:var(--green-600)}
+.alert-icon svg{width:16px;height:16px}
+.alert-content{flex:1;min-width:0}
+.alert-title{font-size:13px;font-weight:600;color:var(--gray-900)}
+.alert-sub{font-size:11px;color:var(--gray-500);margin-top:2px}
+.alert-meta{font-size:11px;color:var(--gray-400);margin-top:4px}
+
+/* ── INPE FORECAST GRID ─────────────────────────────── */
+.forecast-day{
+  background:var(--gray-50);border:1px solid var(--gray-100);
+  border-radius:var(--radius);padding:12px 14px;text-align:center;
+}
+.forecast-date{font-size:10px;color:var(--gray-500);font-weight:600;text-transform:uppercase}
+.forecast-icon{font-size:22px;margin:6px 0}
+.forecast-temp{font-size:13px;font-weight:600;color:var(--gray-900)}
+.forecast-temp span{color:var(--gray-500);font-weight:400}
+.forecast-chuva{font-size:10px;color:var(--blue-600);margin-top:3px}
+
+/* ── SCROLLBAR ───────────────────────────────────────── */
+.content::-webkit-scrollbar{width:5px}
+.content::-webkit-scrollbar-track{background:transparent}
+.content::-webkit-scrollbar-thumb{background:var(--gray-300);border-radius:99px}
+
+/* ── RESPONSIVE ROWS ─────────────────────────────────── */
+.row{display:flex;gap:16px}
+.row .flex-1{flex:1;min-width:0}
+.row .flex-2{flex:2;min-width:0}
+.row .w-260{width:260px;flex-shrink:0}
+.row .w-300{width:300px;flex-shrink:0}
+
+/* ── FIREBASE STATUS ─────────────────────────────────── */
+.firebase-status{
+  position:fixed;bottom:16px;right:16px;
+  background:var(--gray-900);color:white;
+  padding:8px 14px;border-radius:8px;font-size:11px;
+  display:flex;align-items:center;gap:7px;
+  box-shadow:var(--shadow-lg);z-index:100;
+  transition:opacity .3s;
+}
+.firebase-dot{width:7px;height:7px;border-radius:50%;background:var(--green-400);flex-shrink:0}
+.firebase-dot.offline{background:var(--gray-500)}
+
+/* ── HERO IMAGE (Gêmeo Digital Visual) ──────────────── */
+.hero-scene{
+  position:relative;
+  width:100%;
+  aspect-ratio:16/9;
+  border-radius:var(--radius-xl);
+  overflow:hidden;
+  box-shadow:var(--shadow-md);
+  background:#1a2e1a;
+}
+.hero-img{
+  position:absolute;inset:0;
+  width:100%;height:100%;
+  object-fit:cover;
+  object-position:center center;
+  opacity:0;
+  transition:opacity 1.2s ease;
+  pointer-events:none;
+}
+.hero-img.active{
+  opacity:1;
+  z-index:1;
+}
+/* Overlay labels positioned over the 4 white placeholders */
+.hero-labels{
+  position:absolute;inset:0;z-index:2;
+  pointer-events:none;
+}
+.hero-label{
+  position:absolute;
+  background:rgba(255,255,255,.92);
+  backdrop-filter:blur(6px);
+  -webkit-backdrop-filter:blur(6px);
+  border-radius:8px;
+  padding:6px 12px;
+  box-shadow:0 2px 10px rgba(0,0,0,.15);
+  display:flex;align-items:center;gap:8px;
+  transition:transform .3s ease, box-shadow .3s ease;
+  pointer-events:auto;
+}
+.hero-label:hover{
+  transform:translateY(-2px);
+  box-shadow:0 4px 16px rgba(0,0,0,.2);
+}
+.hero-label-icon{
+  width:28px;height:28px;border-radius:7px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.hero-label-icon svg{width:15px;height:15px}
+.hero-label-icon.blue{background:var(--blue-50)} .hero-label-icon.blue svg{color:var(--blue-600)}
+.hero-label-icon.red{background:var(--red-100)} .hero-label-icon.red svg{color:var(--red-500)}
+.hero-label-icon.green{background:var(--green-50)} .hero-label-icon.green svg{color:var(--green-600)}
+.hero-label-icon.orange{background:var(--orange-100)} .hero-label-icon.orange svg{color:var(--orange-500)}
+.hero-label-name{font-size:9px;color:var(--gray-500);font-weight:500;text-transform:uppercase;letter-spacing:.04em}
+.hero-label-val{font-size:15px;font-weight:700;color:var(--gray-900);line-height:1.1;font-variant-numeric:tabular-nums}
+.hero-label-val small{font-size:10px;font-weight:400;color:var(--gray-500)}
+.hero-label-badge{margin-top:1px}
+
+/* Position each label over its sensor placeholder */
+.hero-label.lbl-ar-top{top:10%;left:26%}        /* weather station tag: image center ~(31.7%, 18%) */
+.hero-label.lbl-ar-right{top:23%;right:14%}      /* air sensor tag: image center ~(78.7%, 31%) */
+.hero-label.lbl-solo-left{bottom:22%;left:3%}    /* soil temp tag: image center ~(11.4%, 70%) */
+.hero-label.lbl-solo-right{bottom:22%;right:8%}  /* soil moisture tag: image center ~(81.7%, 69%) */
+
+/* Scene condition badge */
+.hero-condition{
+  position:absolute;top:12px;right:14px;z-index:3;
+  background:rgba(0,0,0,.55);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  color:white;padding:5px 12px;border-radius:99px;
+  font-size:11px;font-weight:500;
+  display:flex;align-items:center;gap:6px;
+}
+.hero-condition-dot{width:6px;height:6px;border-radius:50%;background:var(--green-400)}
+
+/* Estado Atual side panel (matching Canva design) */
+.estado-panel{
+  display:grid;grid-template-columns:1fr 1fr;gap:8px;
+}
+.estado-item{
+  background:var(--gray-50);border:1px solid var(--gray-100);
+  border-radius:10px;padding:10px 12px;
+  display:flex;align-items:center;gap:8px;
+}
+.estado-icon{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.estado-icon svg{width:15px;height:15px}
+.estado-icon.blue{background:var(--blue-50)} .estado-icon.blue svg{color:var(--blue-600)}
+.estado-icon.red{background:var(--red-100)} .estado-icon.red svg{color:var(--red-500)}
+.estado-label{font-size:9px;color:var(--gray-500);font-weight:500}
+.estado-value{font-size:16px;font-weight:700;color:var(--gray-900);font-variant-numeric:tabular-nums;line-height:1.1}
+.estado-value small{font-size:10px;font-weight:400;color:var(--gray-500)}
+
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- ══ SIDEBAR ════════════════════════════════════════════ -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-mark">
+      <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg>
+    </div>
+    <div class="logo-text">AgriTech Soluções<span>Gêmeo Digital</span></div>
+  </div>
+
+  <nav class="nav">
+    <button class="nav-item active" onclick="showPage('visao')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Visão Geral
+    </button>
+    <button class="nav-item" onclick="showPage('sensores')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M6.3 6.3a8 8 0 0 0 0 11.4M17.7 6.3a8 8 0 0 1 0 11.4M3.5 3.5a13 13 0 0 0 0 17M20.5 3.5a13 13 0 0 1 0 17"/></svg>
+      Sensores
+    </button>
+    <button class="nav-item" onclick="showPage('clima')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9z"/></svg>
+      Clima/INPE
+    </button>
+    <button class="nav-item" onclick="showPage('simulacao')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      Simulação
+    </button>
+    <button class="nav-item" onclick="showPage('alertas')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      Alertas
+      <span class="nav-badge" id="badge-alertas">1</span>
+    </button>
+    <button class="nav-item" onclick="showPage('config')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Configurações
+    </button>
+  </nav>
+
+  <div class="sidebar-farm">
+    <div style="font-size:10px;color:rgba(255,255,255,.35);font-weight:500;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Fazenda / Talhão</div>
+    <div class="farm-card">
+      <div class="farm-icon">
+        <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      </div>
+      <div>
+        <div class="farm-name">Fazenda Boa Vista</div>
+        <div class="farm-sub">Talhão 01 — 5 ha</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sidebar-user">
+    <div class="avatar">WB</div>
+    <div>
+      <div class="user-name">Wallisson B.</div>
+      <div class="user-role">Pesquisador UFG</div>
+    </div>
+  </div>
+</aside>
+
+<!-- ══ MAIN ══════════════════════════════════════════════ -->
+<div class="main">
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="topbar-title">
+      <h1 id="page-title">Gêmeo Digital de Irrigação</h1>
+      <p id="page-sub">Decisão operacional em tempo real</p>
+    </div>
+    <div class="status-pill">
+      <div class="status-dot" id="live-dot"></div>
+      <span id="live-label">Dados ao vivo</span>
+    </div>
+    <div class="topbar-meta">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9z"/></svg>
+      <span id="top-clima">25,0 °C</span>
+    </div>
+    <div class="topbar-sep"></div>
+    <div class="topbar-time" id="top-clock">--:--:--</div>
+    <div class="topbar-sep"></div>
+    <button class="notif-btn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      <span class="notif-badge">1</span>
+    </button>
+  </header>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- ══════ PÁGINA: VISÃO GERAL ════════════════════════ -->
+    <div class="page active" id="page-visao">
+
+      <!-- Hero: imagem do gêmeo digital com sensores sobrepostos -->
+      <div class="row">
+        <div class="flex-2">
+          <div class="hero-scene" id="hero-scene">
+            <!-- Imagens empilhadas — só uma visível por vez -->
+            <img class="hero-img active" id="hero-img-a" src="imagens/dia-limpo-umido.png" alt="Gêmeo Digital">
+            <img class="hero-img" id="hero-img-b" src="imagens/dia-limpo-umido.png" alt="Gêmeo Digital">
+
+            <!-- Labels sobrepostos nos sensores -->
+            <div class="hero-labels">
+              <div class="hero-label lbl-ar-top">
+                <div class="hero-label-icon red"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/></svg></div>
+                <div>
+                  <div class="hero-label-name">Temp. ar</div>
+                  <div class="hero-label-val" id="hl-temp-ar">25,0 <small>°C</small></div>
+                  <div class="hero-label-badge" id="hl-badge-ta"><span class="badge green" style="font-size:8px">Ideal</span></div>
+                </div>
+              </div>
+              <div class="hero-label lbl-ar-right">
+                <div class="hero-label-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C8 6 5 10 5 14a7 7 0 0 0 14 0c0-4-3-8-7-12z"/></svg></div>
+                <div>
+                  <div class="hero-label-name">Umid. ar</div>
+                  <div class="hero-label-val" id="hl-umid-ar">63,8 <small>%</small></div>
+                  <div class="hero-label-badge" id="hl-badge-ua"><span class="badge green" style="font-size:8px">Ideal</span></div>
+                </div>
+              </div>
+              <div class="hero-label lbl-solo-left">
+                <div class="hero-label-icon orange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/></svg></div>
+                <div>
+                  <div class="hero-label-name">Temp. solo</div>
+                  <div class="hero-label-val" id="hl-temp-solo">21,9 <small>°C</small></div>
+                  <div class="hero-label-badge" id="hl-badge-ts"><span class="badge green" style="font-size:8px">Ideal</span></div>
+                </div>
+              </div>
+              <div class="hero-label lbl-solo-right">
+                <div class="hero-label-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C8 6 5 10 5 14a7 7 0 0 0 14 0c0-4-3-8-7-12z"/></svg></div>
+                <div>
+                  <div class="hero-label-name">Umid. solo</div>
+                  <div class="hero-label-val" id="hl-umid-solo">35,4 <small>%</small></div>
+                  <div class="hero-label-badge" id="hl-badge-solo"><span class="badge green" style="font-size:8px">Adequado</span></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Condition badge (top-right, over image) -->
+            <div class="hero-condition">
+              <div class="hero-condition-dot"></div>
+              <span id="hero-cond-text">Dia limpo · Solo úmido</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Próxima irrigação + controles (ao lado da imagem) -->
+        <div class="w-260">
+          <!-- Urgency banner — acima do card de irrigação -->
+          <div id="urgency-banner" class="urgency-banner ok" style="margin-bottom:10px;font-size:11px;padding:10px 12px">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            <span id="urgency-text">Solo adequado — irrigação em <strong id="urgency-horas">27,3h</strong></span>
+          </div>
+          <div class="irrig-card">
+            <div class="irrig-card-title">Próxima irrigação</div>
+            <div class="irrig-card-time">Em <span id="irrig-horas">27,3h</span></div>
+            <div class="irrig-row">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C8 6 5 10 5 14a7 7 0 0 0 14 0c0-4-3-8-7-12z"/></svg>
+              <span class="irrig-row-label">Volume previsto</span>
+              <span class="irrig-row-val" id="irrig-vol">1,64 L/m²</span>
+            </div>
+            <div class="irrig-row">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <span class="irrig-row-label">Duração estimada</span>
+              <span class="irrig-row-val" id="irrig-dur">~49 min</span>
+            </div>
+            <div class="irrig-row">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <span class="irrig-row-label">Confiança</span>
+              <span class="irrig-row-val highlight" id="irrig-conf">—</span>
+            </div>
+            <div class="irrig-row">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              <span class="irrig-row-label">Umidade alvo</span>
+              <span class="irrig-row-val">22 – 35%</span>
+            </div>
+          </div>
+
+          <!-- Controles manuais -->
+          <div class="card" style="margin-top:12px;padding:14px 16px">
+            <div class="card-title" style="margin-bottom:10px">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              Controle manual
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <div style="display:flex;align-items:center;gap:6px">
+                <input id="input-volume" type="number" min="1" max="60" value="15" step="1" style="
+                  width:58px;padding:9px 8px;border:1px solid var(--gray-300);border-radius:8px;
+                  font-size:13px;font-weight:600;text-align:center;color:var(--gray-900);
+                  font-family:var(--font-mono);outline:none;transition:border .15s;
+                " onfocus="this.style.borderColor='var(--green-500)'" onblur="this.style.borderColor='var(--gray-300)'">
+                <span style="font-size:10px;color:var(--gray-500);line-height:1.2">L/m²</span>
+              </div>
+              <button id="btn-irrigar" onclick="irrigarAgora()" style="
+                width:100%;padding:10px 14px;border:none;border-radius:8px;
+                background:var(--green-600);color:white;font-size:12px;font-weight:600;
+                cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;
+                transition:background .15s;font-family:var(--font);
+              " onmouseover="this.style.background='var(--green-700)'" onmouseout="this.style.background='var(--green-600)'">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C8 6 5 10 5 14a7 7 0 0 0 14 0c0-4-3-8-7-12z"/></svg>
+                Irrigar agora
+              </button>
+              <button id="btn-pausar" onclick="pausarIrrigacao()" style="
+                width:100%;padding:10px 14px;border:1px solid var(--gray-300);border-radius:8px;
+                background:white;color:var(--gray-700);font-size:12px;font-weight:600;
+                cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;
+                transition:all .15s;font-family:var(--font);
+              " onmouseover="this.style.borderColor='var(--orange-500)';this.style.color='var(--orange-500)'" onmouseout="this.style.borderColor='var(--gray-300)';this.style.color='var(--gray-700)'">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+                Pausar irrigação
+              </button>
+              <button id="btn-chuva" onclick="toggleChuva()" style="
+                width:100%;padding:8px 14px;border:1px solid var(--gray-200);border-radius:8px;
+                background:var(--gray-50);color:var(--gray-500);font-size:11px;font-weight:500;
+                cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;
+                transition:all .15s;font-family:var(--font);
+              ">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9z"/></svg>
+                <span id="btn-chuva-text">Desligar chuvas</span>
+              </button>
+              <div id="ctrl-status" style="font-size:10px;color:var(--gray-500);text-align:center;padding-top:2px;min-height:14px">Modo automático</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Row: urgência + irrigação -->
+      <div class="row">
+        <div class="flex-2">
+          <!-- ETo card -->
+          <div class="card">
+            <div class="card-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+              Evapotranspiração — Penman-Monteith
+            </div>
+            <div class="eto-grid">
+              <div class="eto-item">
+                <div class="eto-label">ETo por leitura (30 min)</div>
+                <div class="eto-value" id="v-eto-30min">0.1004 <small>mm</small></div>
+              </div>
+              <div class="eto-item">
+                <div class="eto-label">ETo equivalente diário</div>
+                <div class="eto-value" id="v-eto-dia">4.819 <small>mm/dia</small></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Reasons -->
+          <div class="card" style="margin-top:12px">
+            <div class="card-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              Por que o sistema recomenda?
+            </div>
+            <ul class="reason-list" id="reason-list">
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                Umidade do solo em queda progressiva
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                ETo acumulada acima do limiar de déficit
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                Sem previsão de chuva para as próximas 24h
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                Melhor janela: período noturno (menor ETo)
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Modelo de IA info -->
+        <div class="w-260">
+          <div class="card" style="height:100%">
+            <div class="card-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+              Modelo de IA
+            </div>
+            <div style="font-size:11px;color:var(--gray-500);line-height:1.7">
+              <div><strong style="color:var(--gray-700)">Algoritmo:</strong> XGBoost MultiOutput</div>
+              <div><strong style="color:var(--gray-700)">Features:</strong> 20 variáveis</div>
+              <div><strong style="color:var(--gray-700)">Treino:</strong> 390 dias históricos</div>
+              <div><strong style="color:var(--gray-700)">Pseudo-label:</strong> Penman-Monteith FAO-56</div>
+              <div style="margin-top:8px"><strong style="color:var(--gray-700)">Atualizado:</strong> <span id="meta-ts" style="font-family:var(--font-mono);font-size:10px">—</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chart: soil moisture 72h -->
+      <div class="card">
+        <div class="card-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Umidade do solo — histórico 72h
+        </div>
+        <div class="chart-wrap-tall"><canvas id="chart-umid-solo"></canvas></div>
+        <div class="chart-legend">
+          <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#2089cf"></div>Umidade do solo (%)</div>
+          <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#4dbb6d;opacity:.4;height:10px;width:10px;border-radius:1px"></div>Faixa ideal (22–35%)</div>
+        </div>
+      </div>
+
+    </div><!-- /page-visao -->
+
+    <!-- ══════ PÁGINA: SENSORES ════════════════════════════ -->
+    <div class="page" id="page-sensores">
+
+      <div class="stat-grid stat-grid-4">
+        <div class="stat-card">
+          <div class="stat-header"><div class="stat-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M6.3 6.3a8 8 0 0 0 0 11.4M17.7 6.3a8 8 0 0 1 0 11.4"/></svg></div><div class="stat-label">Sensores ativos</div></div>
+          <div class="stat-value">4/4</div><div class="stat-sub good">100% da rede</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-header"><div class="stat-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div class="stat-label">Intervalo leitura</div></div>
+          <div class="stat-value">30 min</div><div class="stat-sub good">Simulado</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-header"><div class="stat-icon orange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="15" rx="2" ry="2"/><polyline points="17 2 12 7 7 2"/></svg></div><div class="stat-label">Registros hoje</div></div>
+          <div class="stat-value" id="stat-registros">48</div><div class="stat-sub neutral">Dataset futuro</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-header"><div class="stat-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><div class="stat-label">Saúde da rede</div></div>
+          <div class="stat-value">OK</div><div class="stat-sub good">Excelente</div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="flex-2">
+          <div class="card">
+            <div class="card-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              Série temporal — temperatura e umidade (72h)
+            </div>
+            <div class="chart-wrap-tall"><canvas id="chart-sensores-multi"></canvas></div>
+            <div class="chart-legend">
+              <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#e07b20"></div>Temp. ar (°C)</div>
+              <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#d63b3b"></div>Temp. solo (°C)</div>
+              <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#2089cf"></div>UR ar (%)</div>
+              <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#4dbb6d"></div>UR solo (%)</div>
+            </div>
+          </div>
+        </div>
+        <div class="w-300">
+          <div class="card" style="height:100%">
+            <div class="card-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="9" x2="9" y2="21"/><line x1="15" y1="9" x2="15" y2="21"/></svg>
+              Leituras atuais
+            </div>
+            <table class="data-table">
+              <thead><tr><th>Sensor</th><th>Tipo</th><th>Valor</th></tr></thead>
+              <tbody>
+                <tr><td>S-01</td><td>Umid. solo</td><td><strong id="t-umid-solo">—</strong> %</td></tr>
+                <tr><td>S-02</td><td>Temp. solo</td><td><strong id="t-temp-solo">—</strong> °C</td></tr>
+                <tr><td>S-03</td><td>Umid. ar</td><td><strong id="t-umid-ar">—</strong> %</td></tr>
+                <tr><td>S-04</td><td>Temp. ar</td><td><strong id="t-temp-ar">—</strong> °C</td></tr>
+                <tr><td>—</td><td>ETo (30min)</td><td><strong id="t-eto">—</strong> mm</td></tr>
+                <tr><td>—</td><td>ETo (diário eq.)</td><td><strong id="t-eto-d">—</strong> mm</td></tr>
+              </tbody>
+            </table>
+            <div style="margin-top:16px">
+              <div class="card-title" style="margin-bottom:10px">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C8 6 5 10 5 14a7 7 0 0 0 14 0c0-4-3-8-7-12z"/></svg>
+                Status umidade solo
+              </div>
+              <div class="progress-row">
+                <div class="progress-label">Solo</div>
+                <div class="progress-track"><div class="progress-fill blue" id="prog-umid-solo" style="width:60%"></div></div>
+                <div class="progress-val" id="prog-val-solo">—%</div>
+              </div>
+              <div class="progress-row">
+                <div class="progress-label">Ar</div>
+                <div class="progress-track"><div class="progress-fill green" id="prog-umid-ar" style="width:64%"></div></div>
+                <div class="progress-val" id="prog-val-ar">—%</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════ PÁGINA: CLIMA/INPE ══════════════════════════ -->
+    <div class="page" id="page-clima">
+      <div class="card">
+        <div class="card-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9z"/></svg>
+          Previsão meteorológica — CPTEC/INPE (Open-Meteo)
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:8px" id="forecast-grid">
+          <!-- populated by JS -->
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="flex-2">
+          <div class="card">
+            <div class="card-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              ETo diária estimada (72h)
+            </div>
+            <div class="chart-wrap"><canvas id="chart-eto"></canvas></div>
+          </div>
+        </div>
+        <div class="flex-1">
+          <div class="card" style="height:100%">
+            <div class="card-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C8 6 5 10 5 14a7 7 0 0 0 14 0c0-4-3-8-7-12z"/></svg>
+              Balanço hídrico
+            </div>
+            <div class="eto-grid">
+              <div class="eto-item"><div class="eto-label">ETo 72h (acum.)</div><div class="eto-value" id="eto-acum">— <small>mm</small></div></div>
+              <div class="eto-item"><div class="eto-label">Chuva (24h acum.)</div><div class="eto-value" id="chuva-acum">0,0 <small>mm</small></div></div>
+              <div class="eto-item"><div class="eto-label">Déficit hídrico</div><div class="eto-value" id="deficit-hidrico" style="color:var(--red-500)">— <small>mm</small></div></div>
+              <div class="eto-item"><div class="eto-label">Kc estimado</div><div class="eto-value">0,75</div></div>
+            </div>
+            <div style="margin-top:14px;padding:12px;background:var(--green-50);border-radius:8px;border:1px solid var(--green-100)">
+              <div style="font-size:10px;color:var(--green-700);font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px">Recomendação INPE</div>
+              <div style="font-size:13px;font-weight:600;color:var(--green-800)">Melhor janela: período noturno</div>
+              <div style="font-size:11px;color:var(--green-700);margin-top:3px">Menor ETo, maior umidade relativa e ventos mais calmos reduzem evaporação pós-irrigação.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/></svg>
+          Comparação Local × INPE
+        </div>
+        <table class="data-table">
+          <thead><tr><th>Variável</th><th>Local (sensores)</th><th>INPE (estimado)</th><th>Diferença</th></tr></thead>
+          <tbody>
+            <tr><td>Temp. média do ar (°C)</td><td id="loc-ta">—</td><td>24,3</td><td style="color:var(--amber-500)">+0,7</td></tr>
+            <tr><td>Umid. relativa média (%)</td><td id="loc-ua">—</td><td>67,0</td><td style="color:var(--green-600)">-0,7</td></tr>
+            <tr><td>ETo média (mm/30min)</td><td id="loc-eto">—</td><td>0,1000</td><td style="color:var(--green-600)">+0,0004</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ══════ PÁGINA: SIMULAÇÃO ═══════════════════════════ -->
+    <div class="page" id="page-simulacao">
+
+      <!-- Prediction banner -->
+      <div class="card" style="border-left:4px solid var(--green-500)">
+        <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">
+          <div>
+            <div style="font-size:11px;color:var(--gray-500);font-weight:500;text-transform:uppercase;letter-spacing:.04em">Próxima irrigação recomendada</div>
+            <div style="font-size:22px;font-weight:600;color:var(--green-700);margin-top:2px" id="sim-horas-label">Em 27,3h</div>
+          </div>
+          <div style="flex:1;display:grid;grid-template-columns:repeat(4,1fr);gap:12px;min-width:400px">
+            <div style="text-align:center;padding:10px;background:var(--gray-50);border-radius:8px">
+              <div style="font-size:10px;color:var(--gray-500);font-weight:600;text-transform:uppercase">Volume</div>
+              <div style="font-size:18px;font-weight:600;margin-top:2px;color:var(--gray-900)" id="sim-vol">1,64 L/m²</div>
+            </div>
+            <div style="text-align:center;padding:10px;background:var(--gray-50);border-radius:8px">
+              <div style="font-size:10px;color:var(--gray-500);font-weight:600;text-transform:uppercase">Confiança</div>
+              <div style="font-size:18px;font-weight:600;margin-top:2px;color:var(--green-700)" id="sim-conf">—</div>
+            </div>
+            <div style="text-align:center;padding:10px;background:var(--gray-50);border-radius:8px">
+              <div style="font-size:10px;color:var(--gray-500);font-weight:600;text-transform:uppercase">ETo 24h</div>
+              <div style="font-size:18px;font-weight:600;margin-top:2px;color:var(--gray-900)" id="sim-eto24">—</div>
+            </div>
+            <div style="text-align:center;padding:10px;background:var(--gray-50);border-radius:8px">
+              <div style="font-size:10px;color:var(--gray-500);font-weight:600;text-transform:uppercase">Urgência</div>
+              <div style="font-size:18px;font-weight:600;margin-top:2px" id="sim-urgencia">OK</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="flex-2">
+          <div class="card">
+            <div class="card-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              Previsão: horas até irrigação (72h)
+            </div>
+            <div class="chart-wrap-tall"><canvas id="chart-horas"></canvas></div>
+          </div>
+        </div>
+        <div class="flex-1">
+          <div class="card" style="height:100%">
+            <div class="card-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+              Saúde do solo
+            </div>
+            <div style="display:flex;flex-direction:column;gap:12px;margin-top:4px">
+              <div>
+                <div style="font-size:11px;color:var(--gray-500);margin-bottom:6px">Umidade atual vs faixa ideal</div>
+                <div class="progress-row">
+                  <div class="progress-label" style="width:60px">Atual</div>
+                  <div class="progress-track"><div class="progress-fill blue" id="health-prog" style="width:60%"></div></div>
+                  <div class="progress-val" id="health-val">—</div>
+                </div>
+                <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--gray-400);margin-top:4px;padding:0 4px">
+                  <span>Murcha (15%)</span><span>Ideal (22–35%)</span><span>Sat. (50%)</span>
+                </div>
+              </div>
+              <div style="height:1px;background:var(--gray-100)"></div>
+              <div>
+                <div style="font-size:11px;color:var(--gray-500);margin-bottom:8px">Classificação FAO-56</div>
+                <div style="font-size:13px;font-weight:600;color:var(--gray-900)" id="health-class">Adequado</div>
+                <div style="font-size:11px;color:var(--gray-500);margin-top:3px">Solo entre capacidade de campo e ponto de murcha permanente</div>
+              </div>
+              <div style="height:1px;background:var(--gray-100)"></div>
+              <div>
+                <div style="font-size:11px;color:var(--gray-500);margin-bottom:6px">Parâmetros pedológicos (argissolo)</div>
+                <table class="data-table" style="font-size:11px">
+                  <tbody>
+                    <tr><td>Cap. de campo</td><td style="font-weight:600">35%</td></tr>
+                    <tr><td>Pt. murcha perm.</td><td style="font-weight:600">15%</td></tr>
+                    <tr><td>Kc médio</td><td style="font-weight:600">0,75</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════ PÁGINA: ALERTAS ═════════════════════════════ -->
+    <div class="page" id="page-alertas">
+      <div class="stat-grid stat-grid-4">
+        <div class="stat-card"><div class="stat-header"><div class="stat-icon orange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"/></svg></div><div class="stat-label">Alertas ativos</div></div><div class="stat-value" id="al-ativos">1</div><div class="stat-sub warn">Requerem atenção</div></div>
+        <div class="stat-card"><div class="stat-header"><div class="stat-icon red"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div><div class="stat-label">Críticos</div></div><div class="stat-value" id="al-criticos">0</div><div class="stat-sub good">Sem situação crítica</div></div>
+        <div class="stat-card"><div class="stat-header"><div class="stat-icon orange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div><div class="stat-label">Atenção</div></div><div class="stat-value" id="al-atencao">1</div><div class="stat-sub warn">Monitorar</div></div>
+        <div class="stat-card"><div class="stat-header"><div class="stat-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div><div class="stat-label">Resolvidos</div></div><div class="stat-value" id="al-resolvidos">0</div><div class="stat-sub neutral">Últimas 24h</div></div>
+      </div>
+
+      <div class="row">
+        <div class="flex-2">
+          <div class="card">
+            <div class="card-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+              Alertas atuais
+            </div>
+            <div id="alertas-list">
+              <!-- populated by JS -->
+            </div>
+          </div>
+          <div class="card" style="margin-top:12px">
+            <div class="card-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/></svg>
+              Histórico recente
+            </div>
+            <table class="data-table">
+              <thead><tr><th>Hora</th><th>Tipo</th><th>Descrição</th><th>Status</th></tr></thead>
+              <tbody id="historico-alertas"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="w-300">
+          <div class="card">
+            <div class="card-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              Linha do tempo
+            </div>
+            <div id="timeline-alertas" style="display:flex;flex-direction:column;gap:6px"></div>
+          </div>
+          <div class="card" style="margin-top:12px">
+            <div class="card-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+              Previsão de irrigação
+            </div>
+            <div style="font-size:28px;font-weight:700;color:var(--green-700);margin:8px 0 4px" id="al-horas-pred">—</div>
+            <div style="font-size:11px;color:var(--gray-500)">horas até o próximo evento previsto</div>
+            <div style="margin-top:12px;font-size:12px;color:var(--gray-700);line-height:1.6" id="al-resumo">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════ PÁGINA: CONFIGURAÇÕES ══════════════════════ -->
+    <div class="page" id="page-config">
+      <div class="card">
+        <div class="card-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          Configurações do Firebase
+        </div>
+        <div style="font-size:12px;color:var(--gray-600);line-height:2;font-family:var(--font-mono);background:var(--gray-50);padding:14px;border-radius:8px;border:1px solid var(--gray-100)">
+          <div><strong>DATABASE_URL:</strong> <span id="cfg-url">offline (dados embutidos)</span></div>
+          <div><strong>Nó:</strong> /gemeo_digital</div>
+          <div><strong>Modo:</strong> <span id="cfg-modo">OFFLINE</span></div>
+          <div><strong>Última atualização:</strong> <span id="cfg-ts">—</span></div>
+          <div><strong>Registros em buffer:</strong> <span id="cfg-buf">—</span></div>
+        </div>
+        <div style="margin-top:14px;font-size:12px;color:var(--gray-600);line-height:1.8">
+          <p>Para conectar ao Firebase, edite <code style="background:var(--gray-100);padding:1px 5px;border-radius:4px">firebase_writer.py</code> com sua <code style="background:var(--gray-100);padding:1px 5px;border-radius:4px">DATABASE_URL</code> e rode:</p>
+          <pre style="background:var(--gray-900);color:#a8d8a8;padding:12px;border-radius:8px;margin-top:8px;font-size:11px">python firebase_writer.py --rapido 2</pre>
+          <p style="margin-top:8px">O dashboard detecta o Firebase automaticamente e atualiza em tempo real.</p>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+</div><!-- /shell -->
+
+<!-- Firebase status badge -->
+<div class="firebase-status" id="firebase-status">
+  <div class="firebase-dot offline" id="fb-dot"></div>
+  <span id="fb-label">Modo offline — dados simulados</span>
+</div>
+
+<!-- ══════ SCRIPTS ════════════════════════════════════════ -->
+<script>
+// ═══════════════════════════════════════════════════════════════════════════════
+// MOTOR DE SIMULAÇÃO FÍSICA — GÊMEO DIGITAL
+// Substitui a reprodução estática de CSV por um modelo de estado que calcula
+// a evapotranspiração, decaimento do solo e irrigação em tempo real.
+//
+// Premissa de apresentação:
+//   Solo em 40% (idealmente úmido) leva ~10h simuladas para secar (≈15%)
+//   1 tick = 3 segundos reais = 30 minutos simulados
+//   10h = 20 ticks = 60 segundos de demo para ver o ciclo completo
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// ── Estado da simulação ──────────────────────────────────────────────────────
+const SIM = {
+  hora: 8.0,           // hora simulada (0–23.5, incrementa 0.5 por tick)
+  dia: 1,              // dia simulado
+  umidSolo: 40.0,      // % volumétrica — começa idealmente úmido
+  tempSolo: 22.0,      // °C
+  tempAr: 28.0,        // °C
+  umidAr: 60.0,        // %
+  eto30min: 0.10,      // mm/30min (calculado)
+  horasDesdeIrrig: 0,  // horas desde última irrigação
+  irrigando: false,    // irrigação em andamento
+  pausado: false,      // irrigação pausada
+  ticksResidual: 0,    // ticks restantes de efeito pós-irrigação
+  volUltimaIrrig: 0,   // volume da última irrigação
+  // Chuva
+  chovendo: false,      // está chovendo agora
+  chuvaMM: 0,           // mm de chuva neste tick
+  chuvaAcum24h: 0,      // mm acumulados nas últimas 24h
+  ticksChuva: 0,        // ticks restantes do evento de chuva
+  intensidadeChuva: 0,  // mm/30min do evento atual
+  chuvaDesligada: false,// flag para desligar chuvas na demo
+};
+
+// Histórico para gráficos (últimos 48 pontos = 24h simuladas)
+const SIM_HISTORY = [];
+const MAX_HISTORY = 48;
+
+let currentData = {};
+let firebaseConnected = false;
+let charts = {};
+
+// ── Física: Ciclo diurno + chuva ──────────────────────────────────────────────
+
+function calcTempAr(hora, chovendo) {
+  const base = 27;
+  const amplitude = 7;
+  const fase = (hora - 14) * Math.PI / 12;
+  let temp = base - amplitude * Math.cos(fase) + (Math.random() - 0.5) * 0.8;
+  // Chuva reduz temperatura em 4-7°C
+  if (chovendo) temp -= 4 + Math.random() * 3;
+  return temp;
+}
+
+function calcUmidAr(hora, tempAr, chovendo) {
+  const base = 75 - (tempAr - 20) * 2;
+  const diurno = hora >= 6 && hora < 18 ? -8 : 5;
+  let umid = base + diurno + (Math.random() - 0.5) * 4;
+  // Chuva eleva umidade para 85-98%
+  if (chovendo) umid = Math.max(umid, 85 + Math.random() * 13);
+  return Math.max(25, Math.min(98, umid));
+}
+
+function calcETo(tempAr, umidAr, hora, chovendo) {
+  // Radiação solar: zero à noite, reduzida na chuva
+  let rad = 0;
+  if (hora >= 6 && hora < 18) {
+    rad = 900 * Math.sin(Math.PI * (hora - 6) / 12);
+    // Chuva bloqueia 70-90% da radiação
+    if (chovendo) rad *= 0.15 + Math.random() * 0.15;
+  }
+  
+  const es = 0.6108 * Math.exp(17.27 * tempAr / (tempAr + 237.3));
+  const ea = es * umidAr / 100;
+  const vpd = es - ea;
+  
+  const eto = (0.0015 * rad + 0.3 * vpd) * 0.02;
+  return Math.max(0, eto);
+}
+
+// ── Física: Decaimento do solo ────────────────────────────────────────────────
+
+function tickSimulation() {
+  // 1. Avança hora simulada
+  SIM.hora += 0.5;
+  if (SIM.hora >= 24) {
+    SIM.hora -= 24;
+    SIM.dia++;
+  }
+  SIM.horasDesdeIrrig += 0.5;
+
+  // 2. Lógica de chuva estocástica (desligável para demo)
+  if (SIM.chuvaDesligada) {
+    SIM.chovendo = false;
+    SIM.chuvaMM = 0;
+    SIM.ticksChuva = 0;
+  } else if (SIM.ticksChuva > 0) {
+    // Chuva em andamento
+    SIM.chovendo = true;
+    SIM.chuvaMM = SIM.intensidadeChuva * (0.6 + Math.random() * 0.8);
+    SIM.ticksChuva--;
+    if (SIM.ticksChuva === 0) SIM.chovendo = false;
+  } else {
+    SIM.chuvaMM = 0;
+    SIM.chovendo = false;
+    // Probabilidade de início de chuva: ~8% por tick (~2 eventos por dia)
+    // Mais provável à tarde (convecção do cerrado)
+    let probChuva = 0.025;
+    if (SIM.hora >= 14 && SIM.hora <= 18) probChuva = 0.07; // pico convectivo
+    if (SIM.hora >= 0 && SIM.hora < 6) probChuva = 0.02;    // raro de madrugada
+    
+    if (Math.random() < probChuva) {
+      // Novo evento de chuva
+      SIM.ticksChuva = 2 + Math.floor(Math.random() * 5); // dura 1h–3.5h
+      SIM.intensidadeChuva = 1 + Math.random() * 8;       // 1–9 mm/30min
+      SIM.chovendo = true;
+      SIM.chuvaMM = SIM.intensidadeChuva;
+    }
+  }
+
+  // Acumula chuva 24h (simplificado: decai 1/48 por tick)
+  SIM.chuvaAcum24h = SIM.chuvaAcum24h * (47/48) + SIM.chuvaMM;
+
+  // 3. Calcula condições atmosféricas (afetadas pela chuva)
+  SIM.tempAr = calcTempAr(SIM.hora, SIM.chovendo);
+  SIM.umidAr = calcUmidAr(SIM.hora, SIM.tempAr, SIM.chovendo);
+  SIM.eto30min = calcETo(SIM.tempAr, SIM.umidAr, SIM.hora, SIM.chovendo);
+
+  // 4. Temperatura do solo: segue o ar com inércia térmica
+  const inercia = 0.06;
+  SIM.tempSolo += (SIM.tempAr - SIM.tempSolo) * inercia;
+  SIM.tempSolo += (Math.random() - 0.5) * 0.2;
+  // Chuva resfria o solo diretamente
+  if (SIM.chovendo) SIM.tempSolo -= SIM.chuvaMM * 0.08;
+
+  // 5. Umidade do solo: evapotranspiração - chuva
+  const Kc = 0.75;
+  const etoNorm = SIM.eto30min / 0.10;
+  const taxaBase = 1.25;
+  const taxaReal = taxaBase * (0.3 + 0.7 * etoNorm) * Kc;
+  
+  SIM.umidSolo -= taxaReal;
+  // Chuva adiciona umidade ao solo (absorção ~40% do volume)
+  if (SIM.chovendo) {
+    SIM.umidSolo += SIM.chuvaMM * 0.4;
+  }
+  SIM.umidSolo += (Math.random() - 0.5) * 0.15;
+
+  // 6. Efeito residual pós-irrigação
+  if (SIM.ticksResidual > 0) {
+    const absorção = SIM.volUltimaIrrig * 0.02 * (SIM.ticksResidual / 10);
+    SIM.umidSolo += absorção;
+    SIM.tempSolo -= 0.1;
+    SIM.ticksResidual--;
+  }
+
+  // 7. Clamps
+  SIM.umidSolo = Math.max(5, Math.min(55, SIM.umidSolo));
+  SIM.tempSolo = Math.max(10, Math.min(45, SIM.tempSolo));
+
+  // 8. Irrigação automática (se não pausado e não chovendo)
+  if (!SIM.pausado && !SIM.irrigando && !SIM.chovendo && SIM.umidSolo < 20) {
+    dispararIrrigacao(false);
+  }
+}
+
+// ── Irrigação ────────────────────────────────────────────────────────────────
+
+function dispararIrrigacao(manual, volumeOverride) {
+  SIM.irrigando = true;
+  const deficit = Math.max(0, 38 - SIM.umidSolo);
+  const volume = deficit * 0.7 + SIM.eto30min * 48 * Kc * 1.2;
+  const volumeFinal = volumeOverride || Math.max(5, Math.min(25, volume));
+  
+  // Efeito imediato — proporcional ao volume
+  SIM.umidSolo += volumeFinal * 0.6;
+  SIM.umidSolo = Math.min(55, SIM.umidSolo);
+  SIM.tempSolo -= volumeFinal * 0.15; // água resfria o solo
+  SIM.tempSolo = Math.max(15, SIM.tempSolo);
+  SIM.horasDesdeIrrig = 0;
+  SIM.volUltimaIrrig = volumeFinal;
+  SIM.ticksResidual = 10; // efeito residual por 5h (10 ticks)
+
+  // UI feedback
+  const src = manual ? 'manual' : 'automática';
+  document.getElementById('ctrl-status').textContent = `💧 Irrigação ${src}: ${volumeFinal.toFixed(1)} L/m²`;
+  document.getElementById('ctrl-status').style.color = 'var(--blue-600)';
+  
+  if (manual) {
+    const btn = document.getElementById('btn-irrigar');
+    btn.style.background = 'var(--blue-600)';
+    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C8 6 5 10 5 14a7 7 0 0 0 14 0c0-4-3-8-7-12z"/></svg> Irrigando...';
+  }
+
+  // Fim da irrigação após 5 ticks (2.5h simuladas)
+  setTimeout(() => {
+    SIM.irrigando = false;
+    const btn = document.getElementById('btn-irrigar');
+    btn.style.background = 'var(--green-600)';
+    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C8 6 5 10 5 14a7 7 0 0 0 14 0c0-4-3-8-7-12z"/></svg> Irrigar agora';
+    document.getElementById('ctrl-status').textContent = '✓ Irrigação concluída — solo recarregado';
+    document.getElementById('ctrl-status').style.color = 'var(--green-600)';
+    setTimeout(() => {
+      if (!SIM.pausado) {
+        document.getElementById('ctrl-status').textContent = 'Modo automático';
+        document.getElementById('ctrl-status').style.color = 'var(--gray-500)';
+      }
+    }, 9000);
+  }, 15000); // 5 ticks × 3s
+}
+
+const Kc = 0.75;
+
+// ── Sobrescreve controles manuais do bloco anterior ──────────────────────────
+
+function irrigarAgora() {
+  if (SIM.irrigando) return;
+  const inputVol = parseFloat(document.getElementById('input-volume').value) || 15;
+  const vol = Math.max(1, Math.min(60, inputVol));
+  dispararIrrigacao(true, vol);
+}
+
+function pausarIrrigacao() {
+  if (SIM.pausado) {
+    // Retomar
+    SIM.pausado = false;
+    const btn = document.getElementById('btn-pausar');
+    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg> Pausar irrigação automática';
+    btn.style.borderColor = 'var(--gray-300)';
+    btn.style.color = 'var(--gray-700)';
+    btn.style.background = 'white';
+    document.getElementById('ctrl-status').textContent = 'Modo automático retomado';
+    document.getElementById('ctrl-status').style.color = 'var(--green-600)';
+    setTimeout(() => {
+      document.getElementById('ctrl-status').textContent = 'Modo automático';
+      document.getElementById('ctrl-status').style.color = 'var(--gray-500)';
+    }, 4000);
+  } else {
+    SIM.pausado = true;
+    const btn = document.getElementById('btn-pausar');
+    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg> Retomar irrigação automática';
+    btn.style.borderColor = 'var(--orange-500)';
+    btn.style.color = 'var(--orange-500)';
+    btn.style.background = 'var(--orange-100)';
+    document.getElementById('ctrl-status').textContent = '⏸ Irrigação automática desligada — solo vai secar';
+    document.getElementById('ctrl-status').style.color = 'var(--orange-500)';
+  }
+}
+
+function toggleChuva() {
+  SIM.chuvaDesligada = !SIM.chuvaDesligada;
+  const btn = document.getElementById('btn-chuva');
+  const txt = document.getElementById('btn-chuva-text');
+  if (SIM.chuvaDesligada) {
+    // Para chuva atual imediatamente
+    SIM.chovendo = false;
+    SIM.ticksChuva = 0;
+    SIM.chuvaMM = 0;
+    txt.textContent = 'Ligar chuvas';
+    btn.style.borderColor = 'var(--blue-500)';
+    btn.style.color = 'var(--blue-600)';
+    btn.style.background = 'var(--blue-50)';
+  } else {
+    txt.textContent = 'Desligar chuvas';
+    btn.style.borderColor = 'var(--gray-200)';
+    btn.style.color = 'var(--gray-500)';
+    btn.style.background = 'var(--gray-50)';
+  }
+}
+
+// ── Converte estado da simulação para o formato que applyData espera ─────────
+
+function simStateToData() {
+  const hh = Math.floor(SIM.hora).toString().padStart(2,'0');
+  const mm = (SIM.hora % 1 === 0) ? '00' : '30';
+  const dd = SIM.dia.toString().padStart(2,'0');
+  const label = `${dd}/08 ${hh}:${mm}`;
+
+  // Predição: horas até irrigação
+  // Baseada no ritmo de secagem atual
+  const taxaDecaimento = 1.25 * 0.7; // taxa média
+  const distAteGatilho = Math.max(0, SIM.umidSolo - 20); // quanto falta para trigger
+  const horasAte = distAteGatilho / taxaDecaimento * 0.5; // converter ticks em horas
+  const horasClip = SIM.pausado ? 0 : Math.min(72, Math.max(0, horasAte));
+  
+  // Volume previsto (proporcional ao déficit futuro)
+  const deficitFuturo = Math.max(0, 38 - (SIM.umidSolo - distAteGatilho));
+  const volPrev = SIM.pausado ? 0 : deficitFuturo * 0.7;
+  
+  // Confiança (maior quando dados recentes são consistentes)
+  const conf = Math.min(95, Math.max(5, 50 + (40 - SIM.umidSolo) * 2));
+
+  return {
+    l: label,
+    us: SIM.umidSolo,
+    ta: SIM.tempAr,
+    ua: SIM.umidAr,
+    ts: SIM.tempSolo,
+    eto: SIM.eto30min,
+    h: horasClip,
+    v: Math.max(0, volPrev),
+    c: conf,
+    chovendo: SIM.chovendo,
+    chuvaMM: SIM.chuvaMM,
+    chuvaAcum: SIM.chuvaAcum24h,
+  };
+}
+
+// ── Loop principal da simulação ──────────────────────────────────────────────
+
+function startPhysicsEngine() {
+  // Preenche histórico inicial (24h anteriores simuladas)
+  for (let i = 0; i < MAX_HISTORY; i++) {
+    tickSimulation();
+    SIM_HISTORY.push(simStateToData());
+  }
+  // Reset para condição inicial de apresentação
+  SIM.umidSolo = 40;
+  SIM.tempSolo = 22;
+  SIM.hora = 8;
+  SIM.dia = 1;
+  SIM.horasDesdeIrrig = 2;
+
+  applyData(simStateToData());
+
+  setInterval(() => {
+    // Avança física
+    tickSimulation();
+    
+    // Converte para dados do dashboard
+    const d = simStateToData();
+    
+    // Salva no histórico
+    SIM_HISTORY.push(d);
+    if (SIM_HISTORY.length > MAX_HISTORY) SIM_HISTORY.shift();
+
+    // Atualiza dashboard
+    applyData(d);
+
+    // Atualiza gráficos com dados do histórico
+    updateChartsFromHistory();
+  }, 3000); // 1 tick = 3 segundos
+}
+
+function updateChartsFromHistory() {
+  if (SIM_HISTORY.length < 2) return;
+  
+  const step = 1; // cada ponto
+  const labels = SIM_HISTORY.map(d => d.l);
+  const usData  = SIM_HISTORY.map(d => d.us);
+  const taData  = SIM_HISTORY.map(d => d.ta);
+  const tsData  = SIM_HISTORY.map(d => d.ts);
+  const uaData  = SIM_HISTORY.map(d => d.ua);
+  const etoData = SIM_HISTORY.map(d => +(d.eto * 48).toFixed(3));
+  const hData   = SIM_HISTORY.map(d => d.h);
+
+  if (charts['chart-umid-solo']) {
+    const c = charts['chart-umid-solo'];
+    c.data.labels = labels;
+    c.data.datasets[0].data = usData;
+    c.update('none');
+  }
+  if (charts['chart-sensores-multi']) {
+    const c = charts['chart-sensores-multi'];
+    c.data.labels = labels;
+    c.data.datasets[0].data = taData;
+    c.data.datasets[1].data = tsData;
+    c.data.datasets[2].data = uaData;
+    c.data.datasets[3].data = usData;
+    c.update('none');
+  }
+  if (charts['chart-eto']) {
+    const c = charts['chart-eto'];
+    c.data.labels = labels;
+    c.data.datasets[0].data = etoData;
+    c.update('none');
+  }
+  if (charts['chart-horas']) {
+    const c = charts['chart-horas'];
+    c.data.labels = labels;
+    c.data.datasets[0].data = hData;
+    c.update('none');
+  }
+}
+
+// ── Navigation ────────────────────────────────────────────────────────────────
+const PAGE_META = {
+  visao:     ['Gêmeo Digital de Irrigação','Decisão operacional em tempo real'],
+  sensores:  ['Sensores','Monitoramento em tempo real da rede de sensores'],
+  clima:     ['Clima / INPE','Apoio meteorológico para irrigação'],
+  simulacao: ['Simulação','Análise preditiva e cenários'],
+  alertas:   ['Alertas','Gestão de exceções e eventos'],
+  config:    ['Configurações','Integração Firebase e parâmetros'],
+};
+
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  const btn = document.querySelector(`.nav-item[onclick="showPage('${id}')"]`);
+  if (btn) btn.classList.add('active');
+  const [t, s] = PAGE_META[id] || ['Dashboard',''];
+  document.getElementById('page-title').textContent = t;
+  document.getElementById('page-sub').textContent = s;
+}
+
+// ── Clock ─────────────────────────────────────────────────────────────────────
+function updateClock() {
+  const now = new Date();
+  document.getElementById('top-clock').textContent =
+    now.toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ── Data updater ──────────────────────────────────────────────────────────────
+
+// Image selection logic — maps sensor data to one of 18 scenario images
+let heroSlotA = true; // alternates between img-a and img-b for crossfade
+let currentHeroFile = '';
+
+function getImageName(d) {
+  // Period: extract hour from timestamp label "DD/MM HH:MM"
+  const hourMatch = d.l.match(/(\d{2}):\d{2}$/);
+  const hour = hourMatch ? parseInt(hourMatch[1]) : 12;
+  const periodo = (hour >= 6 && hour < 18) ? 'dia' : 'noite';
+
+  // Weather: usa estado real de chuva do motor de física
+  let clima;
+  if (SIM.chovendo) {
+    clima = 'chuvoso';
+  } else if (d.ua > 78) {
+    clima = 'nublado';
+  } else if (d.eto * 48 > 6 && d.ua < 50) {
+    clima = 'ensolarado';
+  } else if (d.eto * 48 > 3) {
+    clima = 'limpo';
+  } else {
+    clima = 'nublado';
+  }
+
+  // Soil moisture state
+  let solo;
+  if (d.us < 22) solo = 'seco';
+  else if (d.us <= 38) solo = 'umido';
+  else solo = 'saturado';
+
+  // Fallback: noite-nublado images are missing, use noite-limpo instead
+  if (periodo === 'noite' && clima === 'nublado') clima = 'limpo';
+  // noite-ensolarado doesn't exist, use noite-limpo
+  if (periodo === 'noite' && clima === 'ensolarado') clima = 'limpo';
+
+  const file = `${periodo}-${clima}-${solo}.png`;
+  const condText = `${periodo === 'dia' ? 'Dia' : 'Noite'} ${clima} · Solo ${solo}`;
+
+  return { file, condText };
+}
+
+function updateHeroImage(d) {
+  const { file, condText } = getImageName(d);
+  document.getElementById('hero-cond-text').textContent = condText;
+
+  if (file === currentHeroFile) return; // same image, skip transition
+  currentHeroFile = file;
+
+  const imgA = document.getElementById('hero-img-a');
+  const imgB = document.getElementById('hero-img-b');
+  const incoming = heroSlotA ? imgB : imgA;
+  const outgoing = heroSlotA ? imgA : imgB;
+
+  incoming.src = 'imagens/' + file;
+  incoming.onload = () => {
+    incoming.classList.add('active');
+    outgoing.classList.remove('active');
+    heroSlotA = !heroSlotA;
+  };
+  // If image fails to load, keep current
+  incoming.onerror = () => { console.warn('Image not found:', file); };
+}
+
+function getSoilLabel(us) {
+  if (us < 15) return { text: 'Crítico', cls: 'red' };
+  if (us < 22) return { text: 'Baixo', cls: 'orange' };
+  if (us < 38) return { text: 'Adequado', cls: 'green' };
+  if (us < 48) return { text: 'Elevado', cls: 'blue' };
+  return { text: 'Saturado', cls: 'blue' };
+}
+
+function getTempLabel(t) {
+  if (t < 10) return { text: 'Muito baixo', cls: 'blue' };
+  if (t < 18) return { text: 'Baixo', cls: 'blue' };
+  if (t < 32) return { text: 'Ideal', cls: 'green' };
+  if (t < 38) return { text: 'Elevado', cls: 'orange' };
+  return { text: 'Extremo', cls: 'red' };
+}
+
+function getHumidLabel(ua) {
+  if (ua < 30) return { text: 'Muito baixo', cls: 'red' };
+  if (ua < 45) return { text: 'Baixo', cls: 'orange' };
+  if (ua < 75) return { text: 'Ideal', cls: 'green' };
+  if (ua < 90) return { text: 'Elevado', cls: 'blue' };
+  return { text: 'Extremo', cls: 'blue' };
+}
+
+function applyData(d) {
+  currentData = d;
+  const us = d.us, ta = d.ta, ua = d.ua, ts = d.ts;
+  const h = d.h, v = d.v, c = d.c, eto = d.eto;
+  const eto_d = (eto * 48).toFixed(3);
+
+  // Hero image transition
+  updateHeroImage(d);
+
+  // Hero overlay labels + status badges
+  document.getElementById('hl-temp-ar').innerHTML   = ta.toFixed(1) + ' <small>°C</small>';
+  document.getElementById('hl-umid-ar').innerHTML    = ua.toFixed(1) + ' <small>%</small>';
+  document.getElementById('hl-temp-solo').innerHTML  = ts.toFixed(1) + ' <small>°C</small>';
+  document.getElementById('hl-umid-solo').innerHTML  = us.toFixed(1) + ' <small>%</small>';
+
+  const soilLbl = getSoilLabel(us);
+  const taLbl = getTempLabel(ta);
+  const uaLbl = getHumidLabel(ua);
+  const tsLbl = getTempLabel(ts);
+
+  document.getElementById('hl-badge-solo').innerHTML =
+    `<span class="badge ${soilLbl.cls}" style="font-size:8px">${soilLbl.text}</span>`;
+  document.getElementById('hl-badge-ta').innerHTML =
+    `<span class="badge ${taLbl.cls}" style="font-size:8px">${taLbl.text}</span>`;
+  document.getElementById('hl-badge-ua').innerHTML =
+    `<span class="badge ${uaLbl.cls}" style="font-size:8px">${uaLbl.text}</span>`;
+  document.getElementById('hl-badge-ts').innerHTML =
+    `<span class="badge ${tsLbl.cls}" style="font-size:8px">${tsLbl.text}</span>`;
+
+  // Visão geral - ETo cards (keep IDs for compatibility)
+  const vEto30 = document.getElementById('v-eto-30min');
+  const vEtoD = document.getElementById('v-eto-dia');
+  if (vEto30) vEto30.innerHTML = eto.toFixed(4) + ' <small>mm</small>';
+  if (vEtoD) vEtoD.innerHTML   = eto_d + ' <small>mm/dia</small>';
+
+  // Irrigation card
+  document.getElementById('irrig-horas').textContent = h.toFixed(1) + 'h';
+  document.getElementById('irrig-vol').textContent   = v.toFixed(2) + ' L/m²';
+  document.getElementById('irrig-dur').textContent   = '~' + Math.round(v * 30) + ' min';
+  const confTxt = c > 0 ? c.toFixed(1) + '%' : '< 5%';
+  document.getElementById('irrig-conf').textContent  = confTxt;
+
+  // Urgency banner
+  const banner = document.getElementById('urgency-banner');
+  const utext  = document.getElementById('urgency-text');
+  const ustrg  = document.getElementById('urgency-horas');
+  banner.className = 'urgency-banner ';
+  if (SIM.chovendo) {
+    banner.className += 'programar';
+    utext.textContent = '🌧 Chuva detectada (' + (SIM.chuvaMM).toFixed(1) + ' mm) — irrigação adiada. Próxima em ';
+  } else if (h <= 4)  { banner.className += 'urgente'; utext.textContent = 'Atenção urgente! Irrigação necessária em '; }
+  else if (h <= 12) { banner.className += 'atencao'; utext.textContent = 'Programar irrigação — prevista em '; }
+  else if (h <= 24) { banner.className += 'programar'; utext.textContent = 'Solo adequado — irrigação recomendada em '; }
+  else              { banner.className += 'ok'; utext.textContent = 'Solo em nível adequado — próxima irrigação prevista em '; }
+  if (ustrg) ustrg.textContent = h.toFixed(1) + 'h';
+
+  // Topbar clima — mostra chuva quando ativa
+  const chovendo = d.chovendo || false;
+  const chuvaMM = d.chuvaMM || 0;
+  const chuvaAcum = d.chuvaAcum || 0;
+  if (chovendo) {
+    document.getElementById('top-clima').textContent = '🌧 ' + ta.toFixed(1) + ' °C · ' + chuvaMM.toFixed(1) + ' mm';
+  } else {
+    document.getElementById('top-clima').textContent = ta.toFixed(1) + ' °C';
+  }
+
+  // Sensors page
+  document.getElementById('t-umid-solo').textContent = us.toFixed(1);
+  document.getElementById('t-temp-solo').textContent = ts.toFixed(1);
+  document.getElementById('t-umid-ar').textContent   = ua.toFixed(1);
+  document.getElementById('t-temp-ar').textContent   = ta.toFixed(1);
+  document.getElementById('t-eto').textContent       = eto.toFixed(4);
+  document.getElementById('t-eto-d').textContent     = eto_d;
+  const progUs = Math.min(100, (us / 55) * 100);
+  const progUa = Math.min(100, (ua / 100) * 100);
+  document.getElementById('prog-umid-solo').style.width = progUs.toFixed(0) + '%';
+  document.getElementById('prog-umid-ar').style.width   = progUa.toFixed(0) + '%';
+  document.getElementById('prog-val-solo').textContent  = us.toFixed(0) + '%';
+  document.getElementById('prog-val-ar').textContent    = ua.toFixed(0) + '%';
+
+  // Clima page — inclui chuva
+  document.getElementById('loc-ta').textContent  = ta.toFixed(1);
+  document.getElementById('loc-ua').textContent  = ua.toFixed(1);
+  document.getElementById('loc-eto').textContent = eto.toFixed(4);
+  const eto72 = (eto * 48 * 3).toFixed(2);
+  document.getElementById('eto-acum').innerHTML = eto72 + ' <small>mm</small>';
+  document.getElementById('chuva-acum').innerHTML = chuvaAcum.toFixed(1) + ' <small>mm</small>';
+  const deficitReal = Math.max(0, eto72 * 0.75 - chuvaAcum).toFixed(2);
+  document.getElementById('deficit-hidrico').innerHTML = '-' + deficitReal + ' <small>mm</small>';
+
+  // Simulação page
+  document.getElementById('sim-horas-label').textContent = 'Em ' + h.toFixed(1) + 'h';
+  document.getElementById('sim-vol').textContent  = v.toFixed(2) + ' L/m²';
+  document.getElementById('sim-conf').textContent = confTxt;
+  document.getElementById('sim-eto24').textContent = (eto * 48).toFixed(3) + ' mm';
+  const urgColors = {OK:'var(--green-700)',PROGRAMAR:'var(--blue-600)',ATENCAO:'var(--amber-500)',URGENTE:'var(--red-500)'};
+  const urg = h<=4?'URGENTE':h<=12?'ATENCAO':h<=24?'PROGRAMAR':'OK';
+  document.getElementById('sim-urgencia').textContent = urg;
+  document.getElementById('sim-urgencia').style.color = urgColors[urg];
+  document.getElementById('health-prog').style.width = progUs.toFixed(0) + '%';
+  document.getElementById('health-val').textContent  = us.toFixed(0) + '%';
+  const healthClass = us < 15 ? 'Crítico' : us < 22 ? 'Baixo' : us < 35 ? 'Adequado' : 'Elevado';
+  document.getElementById('health-class').textContent = healthClass;
+
+  // Alertas page
+  const critAlert = h <= 12;
+  document.getElementById('al-ativos').textContent   = critAlert ? '1' : '0';
+  document.getElementById('al-criticos').textContent = h <= 4 ? '1' : '0';
+  document.getElementById('al-atencao').textContent  = (h <= 12 && h > 4) ? '1' : '0';
+  document.getElementById('badge-alertas').textContent = critAlert ? '1' : '0';
+  document.getElementById('al-horas-pred').textContent = h.toFixed(1) + 'h';
+  document.getElementById('al-resumo').textContent =
+    `Volume previsto: ${v.toFixed(2)} L/m² | Confiança: ${confTxt} | Solo: ${healthClass}`;
+
+  renderAlertList(h, us);
+
+  // Config page
+  document.getElementById('cfg-ts').textContent = d.l;
+  document.getElementById('cfg-buf').textContent = SIM_HISTORY.length + ' pontos';
+  document.getElementById('meta-ts').textContent = d.l;
+}
+
+function renderAlertList(h, us) {
+  const list = document.getElementById('alertas-list');
+  const items = [];
+  if (h <= 4)  items.push({type:'urgente',title:'Irrigação urgente',sub:`Solo em ${us.toFixed(1)}% — abaixo do limiar crítico`,time:currentData.l});
+  else if (h <= 12) items.push({type:'warn',title:'Programar irrigação',sub:`Solo em ${us.toFixed(1)}% — irrigação prevista em ${h.toFixed(1)}h`,time:currentData.l});
+  else items.push({type:'ok',title:'Solo dentro do ideal',sub:`Umidade ${us.toFixed(1)}% — próxima irrigação em ${h.toFixed(1)}h`,time:currentData.l});
+
+  list.innerHTML = items.map(it => `
+    <div class="alert-item ${it.type==='urgente'?'warn':it.type}">
+      <div class="alert-icon ${it.type==='urgente'||it.type==='warn'?'warn':'ok'}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          ${it.type==='ok'?'<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>':'<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>'}
+        </svg>
+      </div>
+      <div class="alert-content">
+        <div class="alert-title">${it.title}</div>
+        <div class="alert-sub">${it.sub}</div>
+        <div class="alert-meta">${it.time}</div>
+      </div>
+    </div>
+  `).join('');
+
+  // Timeline
+  const tl = document.getElementById('timeline-alertas');
+  const recentEvents = SIM_HISTORY.slice(Math.max(0, SIM_HISTORY.length - 10)).reverse().slice(0, 6);
+  tl.innerHTML = recentEvents.map(e => {
+    const eh = e.h, color = eh<=4?'var(--red-500)':eh<=12?'var(--amber-500)':eh<=24?'var(--blue-600)':'var(--green-500)';
+    return `<div style="display:flex;gap:10px;align-items:flex-start;font-size:11px">
+      <div style="width:8px;height:8px;border-radius:50%;background:${color};margin-top:3px;flex-shrink:0"></div>
+      <div><div style="font-weight:600;color:var(--gray-700)">${e.l}</div>
+      <div style="color:var(--gray-500)">Solo ${e.us}% — em ${e.h}h</div></div>
+    </div>`;
+  }).join('');
+
+  // Histórico
+  const hist = document.getElementById('historico-alertas');
+  hist.innerHTML = recentEvents.slice(0, 5).map(e => {
+    const state = e.h<=12?'<span class="badge orange">Atenção</span>':'<span class="badge green">Normal</span>';
+    return `<tr><td style="font-family:var(--font-mono);font-size:10px">${e.l}</td><td>Umid. solo</td><td>Solo ${e.us}%</td><td>${state}</td></tr>`;
+  }).join('');
+}
+
+// ── Charts ────────────────────────────────────────────────────────────────────
+const CHART_DEFAULTS = {
+  responsive: true, maintainAspectRatio: false,
+  plugins: {legend:{display:false},tooltip:{
+    backgroundColor:'#1a1f1c',titleColor:'#f0f4f2',bodyColor:'#c4ccc9',
+    borderColor:'rgba(255,255,255,.1)',borderWidth:1,cornerRadius:8,
+    padding:10,
+  }},
+  scales: {
+    x: {
+      grid:{color:'rgba(0,0,0,.04)'},
+      ticks:{color:'#6b7775',font:{size:10},maxTicksLimit:8,maxRotation:0},
+    },
+    y: {
+      grid:{color:'rgba(0,0,0,.04)'},
+      ticks:{color:'#6b7775',font:{size:10}},
+    }
+  }
+};
+
+function makeChart(id, config) {
+  const el = document.getElementById(id);
+  if (!el) return null;
+  if (charts[id]) { charts[id].destroy(); }
+  charts[id] = new Chart(el, config);
+  return charts[id];
+}
+
+function initCharts() {
+  const step = 1;
+  const labels = SIM_HISTORY.map(d => d.l);
+  const usData  = SIM_HISTORY.map(d => d.us);
+  const taData  = SIM_HISTORY.map(d => d.ta);
+  const tsData  = SIM_HISTORY.map(d => d.ts);
+  const uaData  = SIM_HISTORY.map(d => d.ua);
+  const etoData = SIM_HISTORY.map(d => +(d.eto * 48).toFixed(3));
+  const hData   = SIM_HISTORY.map(d => d.h);
+
+  // Soil moisture chart (visão geral)
+  makeChart('chart-umid-solo', {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {
+          data: usData, borderColor: '#2089cf', backgroundColor: 'rgba(32,137,207,.08)',
+          borderWidth: 2, pointRadius: 0, fill: true, tension: 0.4,
+        },
+      ]
+    },
+    options: {
+      ...CHART_DEFAULTS,
+      plugins: {
+        ...CHART_DEFAULTS.plugins,
+        annotation: undefined,
+      },
+      scales: {
+        ...CHART_DEFAULTS.scales,
+        y: { ...CHART_DEFAULTS.scales.y, min: 10, max: 55,
+          ticks: { ...CHART_DEFAULTS.scales.y.ticks, callback: v => v + '%' }
+        },
+      }
+    }
+  });
+
+  // Multi-sensor chart (sensores page)
+  makeChart('chart-sensores-multi', {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {data:taData, borderColor:'#e07b20', borderWidth:1.5, pointRadius:0, tension:.4, yAxisID:'yTemp'},
+        {data:tsData, borderColor:'#d63b3b', borderWidth:1.5, pointRadius:0, tension:.4, yAxisID:'yTemp'},
+        {data:uaData, borderColor:'#2089cf', borderWidth:1.5, pointRadius:0, tension:.4, yAxisID:'yUmid', borderDash:[4,3]},
+        {data:usData, borderColor:'#4dbb6d', borderWidth:1.5, pointRadius:0, tension:.4, yAxisID:'yUmid'},
+      ]
+    },
+    options: {
+      ...CHART_DEFAULTS,
+      scales: {
+        x: CHART_DEFAULTS.scales.x,
+        yTemp: { type:'linear', position:'left', grid:{color:'rgba(0,0,0,.04)'},
+          ticks:{color:'#6b7775',font:{size:10}, callback: v => v+'°C'} },
+        yUmid: { type:'linear', position:'right', grid:{display:false},
+          ticks:{color:'#6b7775',font:{size:10}, callback: v => v+'%'} },
+      }
+    }
+  });
+
+  // ETo chart (clima page)
+  makeChart('chart-eto', {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        data: etoData,
+        backgroundColor: 'rgba(61,154,88,.5)',
+        borderColor: '#3a9a58',
+        borderWidth: 1, borderRadius: 3,
+      }]
+    },
+    options: {
+      ...CHART_DEFAULTS,
+      scales: {
+        x: CHART_DEFAULTS.scales.x,
+        y: { ...CHART_DEFAULTS.scales.y,
+          ticks: { ...CHART_DEFAULTS.scales.y.ticks, callback: v => v.toFixed(2) + ' mm' }
+        }
+      }
+    }
+  });
+
+  // Horas chart (simulação page)
+  makeChart('chart-horas', {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        data: hData, borderColor: '#534AB7', backgroundColor: 'rgba(83,74,183,.07)',
+        borderWidth: 2, pointRadius: 0, fill: true, tension: 0.4,
+      }]
+    },
+    options: {
+      ...CHART_DEFAULTS,
+      scales: {
+        x: CHART_DEFAULTS.scales.x,
+        y: { ...CHART_DEFAULTS.scales.y, min: 0, max: 75,
+          ticks: { ...CHART_DEFAULTS.scales.y.ticks, callback: v => v + 'h' }
+        }
+      }
+    }
+  });
+}
+
+// ── Forecast grid ──────────────────────────────────────────────────────────────
+function buildForecastGrid() {
+  const grid = document.getElementById('forecast-grid');
+  const days = ['Hoje','Amanhã','Qua','Qui','Sex','Sáb','Dom'];
+  const icons = ['⛅','☀️','🌤','⛅','🌧','☀️','⛅'];
+  const tmax  = [29,31,30,28,24,30,29];
+  const tmin  = [18,19,18,17,16,18,17];
+  grid.innerHTML = days.map((d, i) => `
+    <div class="forecast-day">
+      <div class="forecast-date">${d}</div>
+      <div class="forecast-icon">${icons[i]}</div>
+      <div class="forecast-temp">${tmax[i]}° <span>/ ${tmin[i]}°</span></div>
+      <div class="forecast-chuva">${i===4?'8 mm chuva':'0 mm'}</div>
+    </div>
+  `).join('');
+}
+
+// ── Firebase (stub — o motor de física substitui a necessidade) ───────────────
+function tryFirebase() {
+  // Em modo motor de física, o Firebase não é necessário.
+  // Se quiser conectar, adicione o SDK do Firebase no <head>.
+  if (typeof firebase !== 'undefined') {
+    try {
+      const db = firebase.database();
+      db.ref('/gemeo_digital').on('value', snap => {
+        if (snap.val()) {
+          document.getElementById('fb-dot').classList.remove('offline');
+          document.getElementById('fb-label').textContent = 'Firebase conectado';
+        }
+      });
+    } catch(e) { /* silent */ }
+  }
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  startPhysicsEngine(); // popula histórico primeiro
+  initCharts();         // depois cria gráficos com dados
+  buildForecastGrid();
+  tryFirebase();
+});
+</script>
+</body>
+</html>
